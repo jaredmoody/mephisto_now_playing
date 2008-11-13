@@ -15,6 +15,7 @@ class SongsController < ApplicationController
   
 	  begin
 	    @song.save
+	    expire_caches  
 	    render :text => "Song Inserted"
 	  rescue StandardError => e
       render :text => e.to_s
@@ -26,6 +27,13 @@ class SongsController < ApplicationController
 	
 	def check_key
 	  @user = User.find_by_crypted_password(params[:auth]) || access_denied
+	end
+	
+	def expire_caches
+	  for site in Site.find(:all)
+	    site.cached_pages.each { |p| self.class.expire_page(p.url) }
+      CachedPage.expire_pages site, site.cached_pages
+	  end
 	end
 	
 end
